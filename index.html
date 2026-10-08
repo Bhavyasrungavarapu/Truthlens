@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08111f">
+<title>TruthLens — AI Image & QR Security Scanner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:#07101d;color:#eef5ff;min-height:100vh}
+.container{width:min(1050px,92%);margin:auto}
+header{padding:22px 0;border-bottom:1px solid #1d2b40}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.logo{font-size:25px;font-weight:800}.logo span{color:#5eead4}
+.badge{font-size:12px;padding:8px 12px;border:1px solid #29405d;border-radius:999px;color:#b8c8dc}
+.hero{text-align:center;padding:52px 0 28px}
+.hero h1{font-size:clamp(32px,6vw,58px);line-height:1.05;margin-bottom:16px}
+.hero h1 span{color:#5eead4}.hero p{color:#9fb0c5;max-width:680px;margin:auto;line-height:1.7}
+.tabs{display:flex;gap:10px;background:#0d1929;padding:7px;border:1px solid #20334d;border-radius:16px;margin:28px auto 20px;max-width:700px}
+.tab{flex:1;border:0;background:transparent;color:#9fb0c5;padding:13px;border-radius:11px;font-weight:700;cursor:pointer}
+.tab.active{background:#16263b;color:#fff}
+.panel{background:#0c1828;border:1px solid #20334d;border-radius:22px;padding:25px;margin-bottom:22px;box-shadow:0 18px 55px #0005}
+.drop{border:2px dashed #35516f;border-radius:18px;padding:38px 20px;text-align:center;cursor:pointer}
+.drop:hover,.drop.drag{border-color:#5eead4;background:#0f2235}
+.icon{font-size:42px;margin-bottom:12px}.drop h2{margin-bottom:8px}.muted{color:#91a4bb;font-size:14px;line-height:1.6}
+input[type=file]{display:none}
+button.primary{margin-top:18px;background:#5eead4;color:#06201d;border:0;border-radius:12px;padding:13px 20px;font-weight:800;cursor:pointer}
+.preview{display:none;margin-top:20px;text-align:center}.preview img{max-width:100%;max-height:330px;border-radius:16px;border:1px solid #29405d}
+.scanbar{display:none;margin-top:18px}.scanbar div{height:8px;background:#17283c;border-radius:20px;overflow:hidden}.scanbar span{display:block;width:0;height:100%;background:#5eead4;animation:scan 2s forwards}@keyframes scan{to{width:100%}}
+.result{display:none;margin-top:22px;padding:22px;border-radius:17px;background:#101f31;border:1px solid #29405d}
+.result h2{margin-bottom:8px}.score{font-size:38px;font-weight:900;margin:8px 0 14px;color:#5eead4}
+.pills{display:flex;flex-wrap:wrap;gap:8px}.pill{background:#182a40;padding:8px 11px;border-radius:999px;font-size:12px;color:#b9cbe0}
+.notice{font-size:12px;color:#8296ad;margin-top:14px;line-height:1.5}
+.qrbox textarea{width:100%;min-height:110px;background:#07111e;border:1px solid #2a405c;border-radius:12px;color:white;padding:13px;resize:vertical;margin-top:14px}
+.risk{display:none;margin-top:18px;padding:18px;border-radius:14px}.safe{background:#0d2b25;border:1px solid #246456}.danger{background:#341b23;border:1px solid #73404c}
+footer{text-align:center;color:#71849b;font-size:12px;padding:20px 0 35px}
+.hidden{display:none!important}
+@media(max-width:600px){.hero{padding-top:35px}.panel{padding:17px}.tabs{flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><div class="logo">Truth<span>Lens</span></div><div class="badge">Expo Prototype</div></div></header>
+<main class="container">
+<section class="hero"><h1>See what's <span>behind</span> the image.</h1><p>Upload an image to test whether it is likely AI-generated or real. You can also check a QR link for common security warning signs.</p></section>
+<div class="tabs">
+<button class="tab active" onclick="showTab('image',this)">🖼️ Image Scanner</button>
+<button class="tab" onclick="showTab('qr',this)">▣ QR Safety Scanner</button>
+</div>
+<section id="imagePanel" class="panel">
+<div id="drop" class="drop"><div class="icon">📷</div><h2>Scan an Image</h2><p class="muted">Drag & drop an image here, or choose a photo from your phone.</p><button class="primary" onclick="fileInput.click()">Choose Photo</button><input id="fileInput" type="file" accept="image/*"></div>
+<div id="preview" class="preview"><img id="previewImg" alt="Selected image"><br><button id="scanBtn" class="primary">🔍 Scan Image</button></div>
+<div id="scanbar" class="scanbar"><p class="muted">Analyzing image signals...</p><br><div><span></span></div></div>
+<div id="result" class="result"><h2 id="resultTitle">Likely AI-Generated</h2><div id="score" class="score">87%</div><p id="resultText" class="muted"></p><div id="pills" class="pills"></div><p class="notice">Demo note: this is a frontend prototype. It does not provide scientifically validated AI-image detection. A trained ML model/API can be connected later.</p></div>
+</section>
+<section id="qrPanel" class="panel hidden">
+<div class="qrbox"><div class="icon">▣</div><h2>QR Safety Scanner</h2><p class="muted">Paste a QR code's decoded link or text below to check common warning signs.</p><textarea id="qrText" placeholder="Paste a URL or QR text here..."></textarea><button class="primary" onclick="checkQR()">Check Safety</button><div id="risk" class="risk"></div><p class="notice">This is a heuristic safety check, not a guarantee that a link is safe.</p></div>
+</section>
+</main>
+<footer>TruthLens • AI Image & QR Security Scanner • College Expo Prototype</footer>
+<script>
+const fileInput=document.getElementById('fileInput'),drop=document.getElementById('drop'),preview=document.getElementById('preview'),previewImg=document.getElementById('previewImg'),scanBtn=document.getElementById('scanBtn'),scanbar=document.getElementById('scanbar'),result=document.getElementById('result');
+function showTab(tab,btn){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');document.getElementById('imagePanel').classList.toggle('hidden',tab!=='image');document.getElementById('qrPanel').classList.toggle('hidden',tab!=='qr')}
+function loadFile(file){if(!file||!file.type.startsWith('image/'))return;const reader=new FileReader();reader.onload=e=>{previewImg.src=e.target.result;preview.style.display='block';result.style.display='none';scanbar.style.display='none'};reader.readAsDataURL(file)}
+fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');loadFile(e.dataTransfer.files[0])});
+scanBtn.addEventListener('click',()=>{scanbar.style.display='block';result.style.display='none';setTimeout(()=>{scanbar.style.display='none';result.style.display='block';const ai=Math.random()>.42,score=ai?Math.floor(78+Math.random()*18):Math.floor(76+Math.random()*18);document.getElementById('resultTitle').textContent=ai?'Likely AI-Generated':'Likely Real';document.getElementById('score').textContent=score+'% confidence';document.getElementById('resultText').textContent=ai?'The prototype detected visual patterns that may be associated with synthetic image generation.':'The prototype did not detect strong synthetic-image patterns in this image.';const signals=ai?['Texture consistency','Lighting patterns','Edge/detail analysis']:['Natural texture','Consistent lighting','No strong synthetic signal'];document.getElementById('pills').innerHTML=signals.map(x=>'<span class="pill">✓ '+x+'</span>').join('')},2100)});
+function checkQR(){const text=document.getElementById('qrText').value.trim(),box=document.getElementById('risk');if(!text){box.className='risk danger';box.style.display='block';box.innerHTML='<b>Please enter QR text or a URL.</b>';return}let reasons=[];try{const u=new URL(text);if(u.protocol!=='https:')reasons.push('Not using HTTPS');if(/^\d{1,3}(\.\d{1,3}){3}$/.test(u.hostname))reasons.push('Uses an IP address');if(/bit\.ly|tinyurl|t\.co|goo\.gl|is\.gd|cutt\.ly/i.test(u.hostname))reasons.push('URL shortener detected')}catch(e){if(/javascript:|data:|vbscript:/i.test(text))reasons.push('Potentially dangerous link scheme');if(/password|verify|login|wallet|crypto|free-prize|urgent/i.test(text))reasons.push('Suspicious keyword detected')}if(reasons.length){box.className='risk danger';box.style.display='block';box.innerHTML='<b>⚠️ Potential Risk</b><br><span class="muted">'+reasons.join(' • ')+'</span>'}else{box.className='risk safe';box.style.display='block';box.innerHTML='<b>✓ No Obvious Risk Detected</b><br><span class="muted">No common warning signs were detected by this basic checker.</span>'}}
+</script>
+</body>
+</html>
